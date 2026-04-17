@@ -1,4 +1,4 @@
-﻿import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, map, of } from 'rxjs';
 import { firstValueFrom } from 'rxjs';
@@ -80,6 +80,16 @@ export class AuthStateService {
 
   signOut() {
     return this.authApi.logout().pipe(
+      map(() => void 0),
+      catchError(() => of(void 0)),
+      map(() => {
+        this.clearSession();
+      }),
+    );
+  }
+
+  signOutAll() {
+    return this.authApi.logoutAll().pipe(
       map(() => void 0),
       catchError(() => of(void 0)),
       map(() => {

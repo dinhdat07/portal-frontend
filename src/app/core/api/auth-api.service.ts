@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpBackend, HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, throwError } from 'rxjs';
 import { appConfig } from '../config/app-config';
@@ -74,6 +74,10 @@ export class AuthApiService {
 
   logout() {
     return this.api.post<ApiMessageResponse>('/auth/logout');
+  }
+
+  logoutAll() {
+    return this.api.post<ApiMessageResponse>('/auth/logout-all');
   }
 
   refreshToken(refreshToken: string) {

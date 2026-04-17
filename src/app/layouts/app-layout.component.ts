@@ -1,5 +1,5 @@
-﻿import { Component, computed, signal } from '@angular/core';
-import { NgClass, NgFor, NgIf } from '@angular/common';
+import { Component, computed, signal } from '@angular/core';
+import { NgFor, NgIf } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthStateService } from '../core/auth/auth-state.service';
 
@@ -11,7 +11,7 @@ interface NavigationItem {
 
 @Component({
   selector: 'app-app-layout',
-  imports: [NgFor, NgIf, NgClass, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [NgFor, NgIf, RouterLink, RouterLinkActive, RouterOutlet],
   template: `
     <div class="app-shell" *ngIf="user() as currentUser">
       <div class="app-grid">

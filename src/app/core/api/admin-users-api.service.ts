@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { map } from 'rxjs';
 import {
   mapPagination,
@@ -8,6 +8,8 @@ import {
   TransportUser,
   UserRole,
   UserStatus,
+  mapUserRoleToTransport,
+  mapUserStatusToTransport,
 } from '../models/user.models';
 import { ApiClientService } from './api-client.service';
 
@@ -28,6 +30,9 @@ export class AdminUsersApiService {
   constructor(private readonly api: ApiClientService) {}
 
   getAdminUsers(filters: UserFilters) {
+    const roleQuery = filters.role ? mapUserRoleToTransport(filters.role) : undefined;
+    const statusQuery = filters.status ? mapUserStatusToTransport(filters.status) : undefined;
+
     return this.api
       .get<PaginatedTransportUsers>('/admin/users', {
         query: {
@@ -37,8 +42,8 @@ export class AdminUsersApiService {
           email: filters.email,
           full_name: filters.fullName,
           dob: filters.dob,
-          role: filters.role,
-          status: filters.status,
+          role: roleQuery,
+          status: statusQuery,
           include_deleted: filters.includeDeleted ? true : undefined,
         },
       })
@@ -65,7 +70,10 @@ export class AdminUsersApiService {
     role: UserRole;
   }) {
     return this.api
-      .post<TransportUser>('/admin/users', payload)
+      .post<TransportUser>('/admin/users', {
+        ...payload,
+        role: mapUserRoleToTransport(payload.role)
+      })
       .pipe(map((response) => mapTransportUser(response)));
   }
 
@@ -85,7 +93,7 @@ export class AdminUsersApiService {
 
   updateAdminUserRole(userId: string, role: UserRole) {
     return this.api
-      .put<TransportUser>(`/admin/users/${userId}/role`, { role })
+      .put<TransportUser>(`/admin/users/${userId}/role`, { role: mapUserRoleToTransport(role) })
       .pipe(map((response) => mapTransportUser(response)));
   }
 

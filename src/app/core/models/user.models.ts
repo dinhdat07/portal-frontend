@@ -1,5 +1,8 @@
-﻿export type UserRole = 'user' | 'admin';
+export type UserRole = 'user' | 'admin';
 export type UserStatus = 'active' | 'pending_verification' | 'deleted';
+
+export type TransportUserRole = 'ROLE_CODE_USER' | 'ROLE_CODE_ADMIN' | 'ROLE_CODE_UNSPECIFIED';
+export type TransportUserStatus = 'USER_STATUS_ACTIVE' | 'USER_STATUS_PENDING_VERIFICATION' | 'USER_STATUS_DELETED' | 'USER_STATUS_UNSPECIFIED';
 
 export interface TransportUser {
   id: string;
@@ -7,8 +10,8 @@ export interface TransportUser {
   username: string;
   first_name: string;
   last_name: string;
-  role: UserRole;
-  status: UserStatus;
+  role: TransportUserRole;
+  status: TransportUserStatus;
   created_at: string;
   updated_at: string;
   dob?: string | null;
@@ -68,8 +71,8 @@ export function mapTransportUser(transport: TransportUser): UserSummary {
     username: transport.username,
     firstName: transport.first_name,
     lastName: transport.last_name,
-    role: transport.role,
-    status: transport.status,
+    role: mapTransportUserRole(transport.role),
+    status: mapTransportUserStatus(transport.status),
     createdAt: transport.created_at,
     updatedAt: transport.updated_at,
     dob: transport.dob ?? null,
@@ -88,4 +91,26 @@ export function mapPagination(meta: PaginationMeta): Pagination {
     pageSize: meta.page_size,
     total: meta.total,
   };
+}
+
+export function mapTransportUserRole(role: TransportUserRole): UserRole {
+  if (role === 'ROLE_CODE_ADMIN') return 'admin';
+  return 'user';
+}
+
+export function mapUserRoleToTransport(role: UserRole): TransportUserRole {
+  if (role === 'admin') return 'ROLE_CODE_ADMIN';
+  return 'ROLE_CODE_USER';
+}
+
+export function mapTransportUserStatus(status: TransportUserStatus): UserStatus {
+  if (status === 'USER_STATUS_PENDING_VERIFICATION') return 'pending_verification';
+  if (status === 'USER_STATUS_DELETED') return 'deleted';
+  return 'active';
+}
+
+export function mapUserStatusToTransport(status: UserStatus): TransportUserStatus {
+  if (status === 'pending_verification') return 'USER_STATUS_PENDING_VERIFICATION';
+  if (status === 'deleted') return 'USER_STATUS_DELETED';
+  return 'USER_STATUS_ACTIVE';
 }

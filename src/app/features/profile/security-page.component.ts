@@ -1,4 +1,4 @@
-﻿import { Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { NgIf } from '@angular/common';
 import {
   AbstractControl,
@@ -10,6 +10,8 @@ import {
 } from '@angular/forms';
 import { UsersApiService } from '../../core/api/users-api.service';
 import { getErrorMessage } from '../../core/api/api.types';
+import { AuthStateService } from '../../core/auth/auth-state.service';
+import { Router } from '@angular/router';
 
 const passwordMatchValidator: ValidatorFn = (group: AbstractControl): ValidationErrors | null => {
   const password = group.get('newPassword')?.value;
@@ -74,6 +76,16 @@ const passwordMatchValidator: ValidatorFn = (group: AbstractControl): Validation
           </ul>
         </article>
       </div>
+
+      <div class="grid-main security-grid" style="margin-top: 2rem;">
+        <article class="panel section-card" style="border-color: var(--danger);">
+          <h3 style="color: var(--danger);">Danger Zone</h3>
+          <p>Log out of all active sessions across all your devices.</p>
+          <button type="button" class="btn btn-danger" [disabled]="loggingOutAll()" (click)="logoutAll()">
+            {{ loggingOutAll() ? 'Logging out...' : 'Log out from all devices' }}
+          </button>
+        </article>
+      </div>
     </div>
   `,
 })
@@ -82,6 +94,7 @@ export class SecurityPageComponent {
   readonly successMessage = signal('');
   readonly saving = signal(false);
   readonly submitted = signal(false);
+  readonly loggingOutAll = signal(false);
 
   readonly form = this.fb.group(
     {
@@ -95,6 +108,8 @@ export class SecurityPageComponent {
   constructor(
     private readonly fb: NonNullableFormBuilder,
     private readonly usersApi: UsersApiService,
+    private readonly authState: AuthStateService,
+    private readonly router: Router,
   ) {
     document.title = 'Security | Portal Frontend';
   }
@@ -157,5 +172,23 @@ export class SecurityPageComponent {
     }
 
     return null;
+  }
+
+  logoutAll(): void {
+    if (!confirm('Are you sure you want to log out from all devices? You will be signed out of this device as well.')) {
+      return;
+    }
+
+    this.loggingOutAll.set(true);
+    this.authState.signOutAll().subscribe({
+      next: () => {
+        this.loggingOutAll.set(false);
+        this.router.navigate(['/login']);
+      },
+      error: () => {
+        this.loggingOutAll.set(false);
+        this.router.navigate(['/login']);
+      }
+    });
   }
 }
