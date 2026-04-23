@@ -1,4 +1,4 @@
-﻿import { Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { NgClass, NgIf } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { UsersApiService } from '../../core/api/users-api.service';
@@ -20,16 +20,8 @@ import { roleBadgeClass, statusBadgeClass, statusLabel } from '../../core/utils/
           <h1>Profile overview</h1>
           <p>Review your current account details and jump into editing or password updates.</p>
         </div>
-        <a
-          class="btn btn-primary"
-          *ngIf="enableProfileEdit; else securityCta"
-          routerLink="/account/profile/edit"
-        >
-          Edit profile
-        </a>
-        <ng-template #securityCta>
-          <a class="btn btn-primary" routerLink="/account/security">Change password</a>
-        </ng-template>
+        <a class="btn btn-primary" *ngIf="enableProfileEdit; else securityCta" routerLink="/account/profile/edit" id="profile-edit-btn">Edit profile</a>
+        <ng-template #securityCta><a class="btn btn-primary" routerLink="/account/security">Change password</a></ng-template>
       </section>
 
       <div class="loading" *ngIf="loading()">Loading profile...</div>
@@ -40,14 +32,13 @@ import { roleBadgeClass, statusBadgeClass, statusLabel } from '../../core/utils/
           <div class="section-head">
             <div>
               <h2>{{ currentUser.firstName }} {{ currentUser.lastName }}</h2>
-              <p>@{{ currentUser.username }}</p>
+              <p>&#64;{{ currentUser.username }}</p>
             </div>
             <div class="badge-row">
               <span [ngClass]="roleClass(currentUser.role)">{{ currentUser.role }}</span>
               <span [ngClass]="statusClass(currentUser.status)">{{ statusText(currentUser.status) }}</span>
             </div>
           </div>
-
           <div class="details-grid">
             <div class="detail-row"><span>Email</span><strong>{{ currentUser.email }}</strong></div>
             <div class="detail-row"><span>Date of birth</span><strong>{{ formatDateValue(currentUser.dob) }}</strong></div>
@@ -80,32 +71,22 @@ export class ProfilePageComponent {
   readonly error = signal('');
   readonly user = signal<UserSummary | null>(null);
 
-  constructor(
-    private readonly usersApi: UsersApiService,
-    private readonly authState: AuthStateService,
-  ) {
-    document.title = 'Profile | Portal Frontend';
+  constructor(private readonly usersApi: UsersApiService, private readonly authState: AuthStateService) {
+    document.title = 'Profile | Portal';
     this.load();
   }
 
   private load(): void {
     this.loading.set(true);
     this.error.set('');
-
     this.usersApi.getMyProfile().subscribe({
       next: (user) => {
         this.loading.set(false);
         this.user.set(user);
-
         const sessionUser = this.authState.currentUser();
-        if (!sessionUser || sessionUser.updatedAt !== user.updatedAt) {
-          this.authState.updateUser(user);
-        }
+        if (!sessionUser || sessionUser.updatedAt !== user.updatedAt) { this.authState.updateUser(user); }
       },
-      error: (error: unknown) => {
-        this.loading.set(false);
-        this.error.set(getErrorMessage(error, 'Unable to load your profile'));
-      },
+      error: (e: unknown) => { this.loading.set(false); this.error.set(getErrorMessage(e, 'Unable to load your profile')); },
     });
   }
 

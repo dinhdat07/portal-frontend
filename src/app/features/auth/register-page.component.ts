@@ -1,4 +1,4 @@
-﻿import { Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { ReactiveFormsModule, Validators, NonNullableFormBuilder } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
@@ -21,46 +21,46 @@ import { getTodayDateInputValue } from '../../core/utils/date-utils';
         <div class="alert danger" *ngIf="error()">{{ error() }}</div>
 
         <div class="grid-cols-2">
-          <label class="field">
+          <label class="field" id="register-firstname-field">
             <span>First name</span>
             <input type="text" formControlName="firstName" placeholder="Ada" />
             <small class="field-error" *ngIf="fieldError('firstName')">{{ fieldError('firstName') }}</small>
           </label>
 
-          <label class="field">
+          <label class="field" id="register-lastname-field">
             <span>Last name</span>
             <input type="text" formControlName="lastName" placeholder="Lovelace" />
             <small class="field-error" *ngIf="fieldError('lastName')">{{ fieldError('lastName') }}</small>
           </label>
         </div>
 
-        <label class="field">
+        <label class="field" id="register-email-field">
           <span>Email</span>
-          <input type="email" formControlName="email" placeholder="ada@example.com" />
+          <input type="email" formControlName="email" placeholder="ada&#64;example.com" />
           <small class="field-error" *ngIf="fieldError('email')">{{ fieldError('email') }}</small>
         </label>
 
         <div class="grid-cols-2">
-          <label class="field">
+          <label class="field" id="register-username-field">
             <span>Username</span>
             <input type="text" formControlName="username" placeholder="ada" />
             <small class="field-error" *ngIf="fieldError('username')">{{ fieldError('username') }}</small>
           </label>
 
-          <label class="field">
+          <label class="field" id="register-dob-field">
             <span>Date of birth</span>
             <input type="date" formControlName="dob" [max]="today" />
             <small class="field-error" *ngIf="fieldError('dob')">{{ fieldError('dob') }}</small>
           </label>
         </div>
 
-        <label class="field">
+        <label class="field" id="register-password-field">
           <span>Password</span>
           <input type="password" formControlName="password" placeholder="Create a strong password" />
           <small class="field-error" *ngIf="fieldError('password')">{{ fieldError('password') }}</small>
         </label>
 
-        <button type="submit" class="btn btn-primary" [disabled]="loading()">
+        <button type="submit" class="btn btn-primary" id="register-submit" [disabled]="loading()">
           {{ loading() ? 'Creating account...' : 'Create account' }}
         </button>
 
@@ -92,7 +92,7 @@ export class RegisterPageComponent {
     private readonly authApi: AuthApiService,
     private readonly router: Router,
   ) {
-    document.title = 'Register | Portal Frontend';
+    document.title = 'Register | Portal';
   }
 
   submit(): void {

@@ -1,26 +1,15 @@
-﻿import { Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { NgIf } from '@angular/common';
-import {
-  AbstractControl,
-  NonNullableFormBuilder,
-  ReactiveFormsModule,
-  ValidationErrors,
-  ValidatorFn,
-  Validators,
-} from '@angular/forms';
+import { AbstractControl, NonNullableFormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthApiService } from '../../core/api/auth-api.service';
 import { getErrorMessage } from '../../core/api/api.types';
 
 const passwordMatchValidator: ValidatorFn = (group: AbstractControl): ValidationErrors | null => {
-  const password = group.get('password')?.value;
-  const confirmPassword = group.get('confirmPassword')?.value;
-
-  if (!password || !confirmPassword) {
-    return null;
-  }
-
-  return password === confirmPassword ? null : { passwordMismatch: true };
+  const pw = group.get('password')?.value;
+  const cpw = group.get('confirmPassword')?.value;
+  if (!pw || !cpw) return null;
+  return pw === cpw ? null : { passwordMismatch: true };
 };
 
 @Component({
@@ -33,24 +22,20 @@ const passwordMatchValidator: ValidatorFn = (group: AbstractControl): Validation
         <h2>Set your password</h2>
         <p>Create your password to finish setting up your account.</p>
       </header>
-
       <form class="card-body form-grid" [formGroup]="form" (ngSubmit)="submit()">
         <div class="alert warning" *ngIf="!token">No setup token was found in the URL.</div>
         <div class="alert danger" *ngIf="error()">{{ error() }}</div>
-
-        <label class="field">
+        <label class="field" id="set-password-field">
           <span>Password</span>
           <input type="password" formControlName="password" />
           <small class="field-error" *ngIf="fieldError('password')">{{ fieldError('password') }}</small>
         </label>
-
-        <label class="field">
+        <label class="field" id="set-confirm-field">
           <span>Confirm password</span>
           <input type="password" formControlName="confirmPassword" />
           <small class="field-error" *ngIf="fieldError('confirmPassword')">{{ fieldError('confirmPassword') }}</small>
         </label>
-
-        <button type="submit" class="btn btn-primary" [disabled]="loading() || !token">
+        <button type="submit" class="btn btn-primary" id="set-submit" [disabled]="loading() || !token">
           {{ loading() ? 'Saving...' : 'Set password' }}
         </button>
       </form>
@@ -62,77 +47,35 @@ export class SetPasswordPageComponent {
   readonly loading = signal(false);
   readonly error = signal('');
   readonly submitted = signal(false);
+  readonly form = this.fb.group({
+    password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(255)]],
+    confirmPassword: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(255)]],
+  }, { validators: [passwordMatchValidator] });
 
-  readonly form = this.fb.group(
-    {
-      password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(255)]],
-      confirmPassword: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(255)]],
-    },
-    { validators: [passwordMatchValidator] },
-  );
-
-  constructor(
-    route: ActivatedRoute,
-    private readonly fb: NonNullableFormBuilder,
-    private readonly authApi: AuthApiService,
-    private readonly router: Router,
-  ) {
-    document.title = 'Set Password | Portal Frontend';
+  constructor(route: ActivatedRoute, private readonly fb: NonNullableFormBuilder, private readonly authApi: AuthApiService, private readonly router: Router) {
+    document.title = 'Set Password | Portal';
     this.token = route.snapshot.queryParamMap.get('token') ?? '';
   }
 
   submit(): void {
     this.submitted.set(true);
     this.error.set('');
-
-    if (!this.token || this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
-
+    if (!this.token || this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.loading.set(true);
-    const value = this.form.getRawValue();
-
-    this.authApi
-      .setPassword({
-        token: this.token,
-        password: value.password,
-        confirm_password: value.confirmPassword,
-      })
-      .subscribe({
-        next: () => {
-          this.loading.set(false);
-          this.router.navigateByUrl('/login');
-        },
-        error: (error: unknown) => {
-          this.loading.set(false);
-          this.error.set(getErrorMessage(error, 'Unable to set password'));
-        },
-      });
+    const v = this.form.getRawValue();
+    this.authApi.setPassword({ token: this.token, password: v.password, confirm_password: v.confirmPassword }).subscribe({
+      next: () => { this.loading.set(false); this.router.navigateByUrl('/login'); },
+      error: (e: unknown) => { this.loading.set(false); this.error.set(getErrorMessage(e, 'Unable to set password')); },
+    });
   }
 
   fieldError(name: 'password' | 'confirmPassword'): string | null {
-    const control = this.form.controls[name];
-    if (!control || (!control.touched && !this.submitted())) {
-      return null;
-    }
-
-    if (control.hasError('required')) {
-      return name === 'password' ? 'Password is required' : 'Password confirmation is required';
-    }
-
-    if (control.hasError('minlength')) {
-      return 'Minimum 8 characters';
-    }
-
-    if (control.hasError('maxlength')) {
-      return 'Maximum 255 characters';
-    }
-
-    if (name === 'confirmPassword' && this.form.hasError('passwordMismatch')) {
-      return 'Password confirmation does not match';
-    }
-
+    const c = this.form.controls[name];
+    if (!c || (!c.touched && !this.submitted())) return null;
+    if (c.hasError('required')) return name === 'password' ? 'Password is required' : 'Password confirmation is required';
+    if (c.hasError('minlength')) return 'Minimum 8 characters';
+    if (c.hasError('maxlength')) return 'Maximum 255 characters';
+    if (name === 'confirmPassword' && this.form.hasError('passwordMismatch')) return 'Password confirmation does not match';
     return null;
   }
 }

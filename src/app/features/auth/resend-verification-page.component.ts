@@ -1,4 +1,4 @@
-﻿import { Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -20,13 +20,13 @@ import { getErrorMessage } from '../../core/api/api.types';
         <div class="alert danger" *ngIf="error()">{{ error() }}</div>
         <div class="alert success" *ngIf="successMessage()">{{ successMessage() }}</div>
 
-        <label class="field">
+        <label class="field" id="resend-email-field">
           <span>Email</span>
-          <input type="email" formControlName="email" placeholder="ada@example.com" />
+          <input type="email" formControlName="email" placeholder="ada&#64;example.com" />
           <small class="field-error" *ngIf="fieldError()">{{ fieldError() }}</small>
         </label>
 
-        <button type="submit" class="btn btn-primary" [disabled]="loading()">
+        <button type="submit" class="btn btn-primary" id="resend-submit" [disabled]="loading()">
           {{ loading() ? 'Sending...' : 'Resend verification' }}
         </button>
 
@@ -52,7 +52,7 @@ export class ResendVerificationPageComponent {
     private readonly fb: NonNullableFormBuilder,
     private readonly authApi: AuthApiService,
   ) {
-    document.title = 'Resend Verification | Portal Frontend';
+    document.title = 'Resend Verification | Portal';
   }
 
   submit(): void {

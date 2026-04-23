@@ -1,4 +1,4 @@
-﻿import { Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthApiService } from '../../core/api/auth-api.service';
@@ -22,7 +22,7 @@ import { getErrorMessage } from '../../core/api/api.types';
         <div class="alert danger" *ngIf="error()">{{ error() }}</div>
 
         <div class="grid-actions">
-          <a class="btn btn-primary" routerLink="/login">Go to sign in</a>
+          <a class="btn btn-primary" routerLink="/login" id="verify-go-login">Go to sign in</a>
           <a class="btn btn-secondary" routerLink="/resend-verification" *ngIf="!successMessage()">
             Resend verification
           </a>
@@ -41,7 +41,7 @@ export class VerifyEmailPageComponent {
     route: ActivatedRoute,
     private readonly authApi: AuthApiService,
   ) {
-    document.title = 'Verify Email | Portal Frontend';
+    document.title = 'Verify Email | Portal';
     this.token = route.snapshot.queryParamMap.get('token') ?? '';
     if (this.token) {
       this.verify();

@@ -1,4 +1,4 @@
-﻿import { Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthApiService } from '../../core/api/auth-api.service';
@@ -31,7 +31,7 @@ import { getErrorMessage } from '../../core/api/api.types';
         <div class="alert danger" *ngIf="error()">{{ error() }}</div>
 
         <div class="grid-actions">
-          <button class="btn btn-primary" [disabled]="!email || loading()" (click)="resend()">
+          <button class="btn btn-primary" id="resend-verification-btn" [disabled]="!email || loading()" (click)="resend()">
             {{ loading() ? 'Sending...' : 'Resend verification' }}
           </button>
           <a class="btn btn-secondary" routerLink="/login">Back to sign in</a>
@@ -55,7 +55,7 @@ export class RegisterSuccessPageComponent {
     route: ActivatedRoute,
     private readonly authApi: AuthApiService,
   ) {
-    document.title = 'Check Your Email | Portal Frontend';
+    document.title = 'Check Your Email | Portal';
     this.email = route.snapshot.queryParamMap.get('email') ?? '';
   }
 

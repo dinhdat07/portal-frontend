@@ -1,4 +1,4 @@
-﻿import { Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { ReactiveFormsModule, Validators, NonNullableFormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
@@ -20,19 +20,19 @@ import { AuthStateService } from '../../core/auth/auth-state.service';
       <form class="card-body form-grid" [formGroup]="form" (ngSubmit)="submit()">
         <div class="alert danger" *ngIf="error()">{{ error() }}</div>
 
-        <label class="field">
+        <label class="field" id="login-identifier-field">
           <span>Email or username</span>
-          <input type="text" formControlName="identifier" placeholder="ada@example.com" />
+          <input type="text" formControlName="identifier" placeholder="ada&#64;example.com" />
           <small class="field-error" *ngIf="fieldError('identifier')">{{ fieldError('identifier') }}</small>
         </label>
 
-        <label class="field">
+        <label class="field" id="login-password-field">
           <span>Password</span>
           <input type="password" formControlName="password" placeholder="Enter your password" />
           <small class="field-error" *ngIf="fieldError('password')">{{ fieldError('password') }}</small>
         </label>
 
-        <button type="submit" class="btn btn-primary" [disabled]="loading()">
+        <button type="submit" class="btn btn-primary" id="login-submit" [disabled]="loading()">
           {{ loading() ? 'Signing in...' : 'Sign in' }}
         </button>
 
@@ -65,7 +65,7 @@ export class LoginPageComponent {
     private readonly router: Router,
     private readonly route: ActivatedRoute,
   ) {
-    document.title = 'Login | Portal Frontend';
+    document.title = 'Login | Portal';
   }
 
   submit(): void {
