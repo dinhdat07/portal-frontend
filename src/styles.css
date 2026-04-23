@@ -572,8 +572,9 @@ li+li {
 .user-panel {
   margin-top: auto;
   border-radius: var(--radius-card);
-  background: var(--bg-near-black);
-  color: var(--text-on-dark-muted);
+  background: #F1F4F9;
+  border: 1px solid #D1D9E6;
+  color: var(--text-secondary);
   padding: var(--space-4);
 }
 
@@ -582,7 +583,7 @@ li+li {
 }
 
 .user-panel .strong {
-  color: var(--text-on-dark);
+  color: var(--text-primary);
 }
 
 .user-panel-foot {
@@ -594,15 +595,16 @@ li+li {
 }
 
 .user-panel .btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
-  color: var(--text-on-dark);
+  background: var(--bg-white);
+  border-color: var(--divider);
+  color: var(--text-primary);
   font-size: 13px;
   padding: 8px 16px;
 }
 
 .user-panel .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: #E8ECF2;
+  border-color: var(--border-outline-btn);
 }
 
 /* ===== App Main Content ===== */
