@@ -1,4 +1,8 @@
-﻿import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
+
+export interface MessageResponse {
+  message: string;
+}
 
 export interface ApiErrorPayload {
   error?: string;

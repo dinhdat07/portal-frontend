@@ -58,7 +58,7 @@ export class AdminUserEditPageComponent {
   });
   readonly isOtherAdmin = computed(() => {
     const t = this.user(); const a = this.authState.currentUser()?.id;
-    return Boolean(t && a && t.role === 'admin' && t.id !== a);
+    return Boolean(t && a && t.role.code === 'ROLE_CODE_ADMIN' && t.id !== a);
   });
   readonly userId: string;
 

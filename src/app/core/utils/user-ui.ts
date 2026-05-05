@@ -1,4 +1,4 @@
-﻿import { UserRole, UserStatus } from '../models/user.models';
+import { UserStatus } from '../models/user.models';
 
 export function statusLabel(status: UserStatus): string {
   return status === 'pending_verification' ? 'pending' : status;
@@ -16,6 +16,6 @@ export function statusBadgeClass(status: UserStatus): string {
   return 'badge badge-danger';
 }
 
-export function roleBadgeClass(role: UserRole): string {
-  return role === 'admin' ? 'badge badge-accent' : 'badge badge-neutral';
+export function roleBadgeClass(roleCode: string): string {
+  return roleCode === 'ROLE_CODE_ADMIN' ? 'badge badge-accent' : 'badge badge-neutral';
 }

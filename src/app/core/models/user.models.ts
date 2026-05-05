@@ -1,8 +1,41 @@
-export type UserRole = 'user' | 'admin';
 export type UserStatus = 'active' | 'pending_verification' | 'deleted';
-
-export type TransportUserRole = 'ROLE_CODE_USER' | 'ROLE_CODE_ADMIN' | 'ROLE_CODE_UNSPECIFIED';
 export type TransportUserStatus = 'USER_STATUS_ACTIVE' | 'USER_STATUS_PENDING_VERIFICATION' | 'USER_STATUS_DELETED' | 'USER_STATUS_UNSPECIFIED';
+
+export interface Permission {
+  id: string;
+  code: string;
+  name: string;
+}
+
+export interface Role {
+  id: string;
+  code: string;
+  name: string;
+  isSystem: boolean;
+  permissions: Permission[];
+}
+
+export interface TransportRole {
+  id: string;
+  code: string;
+  name: string;
+  is_system: boolean;
+  permissions: Permission[];
+}
+
+export interface RoleSummary {
+  id: string;
+  code: string;
+  name: string;
+  isSystem: boolean;
+}
+
+export interface TransportRoleSummary {
+  id: string;
+  code: string;
+  name: string;
+  is_system: boolean;
+}
 
 export interface TransportUser {
   id: string;
@@ -10,7 +43,7 @@ export interface TransportUser {
   username: string;
   first_name: string;
   last_name: string;
-  role: TransportUserRole;
+  role: TransportRoleSummary;
   status: TransportUserStatus;
   created_at: string;
   updated_at: string;
@@ -29,7 +62,7 @@ export interface UserSummary {
   username: string;
   firstName: string;
   lastName: string;
-  role: UserRole;
+  role: RoleSummary;
   status: UserStatus;
   createdAt: string;
   updatedAt: string;
@@ -64,6 +97,25 @@ export interface PaginatedUsers {
   meta: Pagination;
 }
 
+export function mapRoleSummary(transport: TransportRoleSummary): RoleSummary {
+  return {
+    id: transport.id,
+    code: transport.code,
+    name: transport.name,
+    isSystem: transport.is_system,
+  };
+}
+
+export function mapRole(transport: TransportRole): Role {
+  return {
+    id: transport.id,
+    code: transport.code,
+    name: transport.name,
+    isSystem: transport.is_system,
+    permissions: transport.permissions || [],
+  };
+}
+
 export function mapTransportUser(transport: TransportUser): UserSummary {
   return {
     id: transport.id,
@@ -71,7 +123,7 @@ export function mapTransportUser(transport: TransportUser): UserSummary {
     username: transport.username,
     firstName: transport.first_name,
     lastName: transport.last_name,
-    role: mapTransportUserRole(transport.role),
+    role: mapRoleSummary(transport.role),
     status: mapTransportUserStatus(transport.status),
     createdAt: transport.created_at,
     updatedAt: transport.updated_at,
@@ -91,16 +143,6 @@ export function mapPagination(meta: PaginationMeta): Pagination {
     pageSize: meta.page_size,
     total: meta.total,
   };
-}
-
-export function mapTransportUserRole(role: TransportUserRole): UserRole {
-  if (role === 'ROLE_CODE_ADMIN') return 'admin';
-  return 'user';
-}
-
-export function mapUserRoleToTransport(role: UserRole): TransportUserRole {
-  if (role === 'admin') return 'ROLE_CODE_ADMIN';
-  return 'ROLE_CODE_USER';
 }
 
 export function mapTransportUserStatus(status: TransportUserStatus): UserStatus {

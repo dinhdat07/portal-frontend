@@ -1,4 +1,4 @@
-﻿import { Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { guestChildGuard, authChildGuard, adminGuard } from './core/auth/auth.guards';
 import { PublicLayoutComponent } from './layouts/public-layout.component';
 import { AppLayoutComponent } from './layouts/app-layout.component';
@@ -17,6 +17,9 @@ import { AdminUsersPageComponent } from './features/admin-users/admin-users-page
 import { AdminUserDetailPageComponent } from './features/admin-users/admin-user-detail-page.component';
 import { AdminUserEditPageComponent } from './features/admin-users/admin-user-edit-page.component';
 import { AdminUserCreatePageComponent } from './features/admin-users/admin-user-create-page.component';
+import { AdminRolesPageComponent } from './features/admin-roles/admin-roles-page.component';
+import { AdminRoleCreatePageComponent } from './features/admin-roles/admin-role-create-page.component';
+import { AdminRoleDetailPageComponent } from './features/admin-roles/admin-role-detail-page.component';
 
 export const routes: Routes = [
   {
@@ -51,6 +54,9 @@ export const routes: Routes = [
           { path: 'users/new', component: AdminUserCreatePageComponent },
           { path: 'users/:userId/edit', component: AdminUserEditPageComponent },
           { path: 'users/:userId', component: AdminUserDetailPageComponent },
+          { path: 'roles', component: AdminRolesPageComponent },
+          { path: 'roles/new', component: AdminRoleCreatePageComponent },
+          { path: 'roles/:roleId', component: AdminRoleDetailPageComponent },
         ],
       },
     ],

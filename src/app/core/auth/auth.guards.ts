@@ -1,4 +1,4 @@
-﻿import { CanActivateChildFn, CanActivateFn, Router } from '@angular/router';
+import { CanActivateChildFn, CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { AuthStateService } from './auth-state.service';
 
@@ -53,5 +53,5 @@ export const adminGuard: CanActivateFn = () => {
     return redirectToLogin(router);
   }
 
-  return user.role === 'admin' ? true : redirectToProfile(router);
+  return user.role.code === 'ROLE_CODE_ADMIN' ? true : redirectToProfile(router);
 };

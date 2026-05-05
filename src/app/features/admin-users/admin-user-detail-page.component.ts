@@ -1,18 +1,19 @@
-import { Component, computed, signal } from '@angular/core';
-import { NgClass, NgIf } from '@angular/common';
+import { Component, computed, signal, OnInit } from '@angular/core';
+import { NgClass, NgFor, NgIf } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AdminUsersApiService } from '../../core/api/admin-users-api.service';
+import { AdminRolesApiService } from '../../core/api/admin-roles-api.service';
 import { getErrorMessage } from '../../core/api/api.types';
 import { AuthStateService } from '../../core/auth/auth-state.service';
-import { UserRole, UserSummary } from '../../core/models/user.models';
+import { Role, UserSummary } from '../../core/models/user.models';
 import { appConfig } from '../../core/config/app-config';
 import { formatDate, formatDateTime } from '../../core/utils/date-utils';
 import { roleBadgeClass, statusBadgeClass, statusLabel } from '../../core/utils/user-ui';
 
 @Component({
   selector: 'app-admin-user-detail-page',
-  imports: [RouterLink, NgIf, NgClass, FormsModule],
+  imports: [RouterLink, NgIf, NgFor, NgClass, FormsModule],
   template: `
     <div class="stack-lg">
       <section class="page-head">
@@ -26,7 +27,7 @@ import { roleBadgeClass, statusBadgeClass, statusLabel } from '../../core/utils/
           <article class="panel section-card">
             <div class="section-head">
               <div><p class="eyebrow-muted">Identity snapshot</p><h2>{{ currentUser.email }}</h2></div>
-              <div class="badge-row"><span [ngClass]="roleClass(currentUser.role)">{{ currentUser.role }}</span><span [ngClass]="statusClass(currentUser.status)">{{ statusText(currentUser.status) }}</span></div>
+              <div class="badge-row"><span [ngClass]="roleClass(currentUser.role.code)">{{ currentUser.role.name }}</span><span [ngClass]="statusClass(currentUser.status)">{{ statusText(currentUser.status) }}</span></div>
             </div>
             <div class="details-grid">
               <div class="detail-row"><span>Username</span><strong>&#64;{{ currentUser.username }}</strong></div>
@@ -43,8 +44,12 @@ import { roleBadgeClass, statusBadgeClass, statusLabel } from '../../core/utils/
             <div class="alert warning" *ngIf="isOtherAdmin()">Other admin accounts are read-only. You cannot change this admin from here.</div>
             <div class="alert danger" *ngIf="roleError()">{{ roleError() }}</div>
             <div class="btn-row align-end" style="margin-top: var(--space-3);">
-              <label class="field grow"><span>Role</span><select [(ngModel)]="selectedRole" [disabled]="isOtherAdmin() || roleSaving()"><option value="user">user</option><option value="admin">admin</option></select></label>
-              <button class="btn btn-primary" id="admin-save-role-btn" [disabled]="isOtherAdmin() || roleSaving() || selectedRole === currentUser.role" (click)="saveRole()">{{ roleSaving() ? 'Saving...' : 'Save role' }}</button>
+              <label class="field grow"><span>Role</span>
+                <select [(ngModel)]="selectedRoleCode" [disabled]="isOtherAdmin() || roleSaving()">
+                  <option *ngFor="let r of roles()" [value]="r.code">{{ r.name }}</option>
+                </select>
+              </label>
+              <button class="btn btn-primary" id="admin-save-role-btn" [disabled]="isOtherAdmin() || roleSaving() || selectedRoleCode === currentUser.role.code" (click)="saveRole()">{{ roleSaving() ? 'Saving...' : 'Save role' }}</button>
             </div>
           </article>
         </div>
@@ -83,7 +88,7 @@ import { roleBadgeClass, statusBadgeClass, statusLabel } from '../../core/utils/
     </div>
   `,
 })
-export class AdminUserDetailPageComponent {
+export class AdminUserDetailPageComponent implements OnInit {
   readonly enableUserEdit = appConfig.featureFlags.enableAdminUserEdit;
   readonly loading = signal(true);
   readonly loadError = signal('');
@@ -92,14 +97,19 @@ export class AdminUserDetailPageComponent {
   readonly roleSaving = signal(false);
   readonly stateSaving = signal(false);
   readonly user = signal<UserSummary | null>(null);
+  readonly roles = signal<Role[]>([]);
   readonly dialog = signal<'delete' | 'restore' | null>(null);
-  selectedRole: UserRole = 'user';
-  readonly isOtherAdmin = computed(() => { const u = this.user(); const a = this.authState.currentUser()?.id; return Boolean(u && a && u.role === 'admin' && u.id !== a); });
+  selectedRoleCode: string = '';
+  readonly isOtherAdmin = computed(() => { const u = this.user(); const a = this.authState.currentUser()?.id; return Boolean(u && a && u.role.code === 'ROLE_CODE_ADMIN' && u.id !== a); });
   private readonly userId: string;
 
-  constructor(route: ActivatedRoute, private readonly router: Router, private readonly adminUsersApi: AdminUsersApiService, private readonly authState: AuthStateService) {
+  constructor(route: ActivatedRoute, private readonly router: Router, private readonly adminUsersApi: AdminUsersApiService, private readonly adminRolesApi: AdminRolesApiService, private readonly authState: AuthStateService) {
     document.title = 'Admin User Detail | Portal';
     this.userId = route.snapshot.paramMap.get('userId') ?? '';
+  }
+
+  ngOnInit(): void {
+    this.adminRolesApi.getRoles().subscribe(roles => this.roles.set(roles));
     this.load();
   }
 
@@ -107,16 +117,16 @@ export class AdminUserDetailPageComponent {
     if (!this.userId) { this.loadError.set('User ID is required'); this.loading.set(false); return; }
     this.loading.set(true);
     this.adminUsersApi.getAdminUser(this.userId).subscribe({
-      next: (u) => { this.loading.set(false); this.user.set(u); this.selectedRole = u.role; },
+      next: (u) => { this.loading.set(false); this.user.set(u); this.selectedRoleCode = u.role.code; },
       error: (e: unknown) => { this.loading.set(false); this.loadError.set(getErrorMessage(e, 'Unable to load user details')); },
     });
   }
 
   saveRole(): void {
     const u = this.user();
-    if (!u || this.isOtherAdmin() || this.selectedRole === u.role) return;
+    if (!u || this.isOtherAdmin() || this.selectedRoleCode === u.role.code) return;
     this.roleSaving.set(true); this.roleError.set('');
-    this.adminUsersApi.updateAdminUserRole(this.userId, this.selectedRole).subscribe({
+    this.adminUsersApi.updateAdminUserRole(this.userId, this.selectedRoleCode).subscribe({
       next: (user) => { this.roleSaving.set(false); this.user.set(user); },
       error: (e: unknown) => { this.roleSaving.set(false); this.roleError.set(getErrorMessage(e, 'Unable to update role')); },
     });

@@ -39,7 +39,7 @@ interface NavigationItem {
             <p class="strong">{{ currentUser.firstName }} {{ currentUser.lastName }}</p>
             <p>{{ currentUser.email }}</p>
             <div class="user-panel-foot">
-              <span class="badge badge-accent">{{ currentUser.role }}</span>
+              <span class="badge badge-accent">{{ currentUser.role.name }}</span>
               <button class="btn btn-secondary" [disabled]="isSigningOut()" (click)="signOut()">
                 {{ isSigningOut() ? 'Signing out...' : 'Sign out' }}
               </button>
@@ -68,14 +68,15 @@ export class AppLayoutComponent {
   private readonly navigation: NavigationItem[] = [
     { label: 'Profile', path: '/account/profile' },
     { label: 'Security', path: '/account/security' },
-    { label: 'Admin Users', path: '/admin/users', adminOnly: true },
+    { label: 'Team Directory', path: '/admin/users', adminOnly: true },
+    { label: 'Access Policies', path: '/admin/roles', adminOnly: true },
   ];
 
   readonly user = computed(() => this.authState.currentUser());
   readonly isSigningOut = signal(false);
 
   readonly visibleNavigation = computed(() =>
-    this.navigation.filter((item) => !item.adminOnly || this.user()?.role === 'admin'),
+    this.navigation.filter((item) => !item.adminOnly || this.user()?.role.code === 'ROLE_CODE_ADMIN'),
   );
 
   constructor(

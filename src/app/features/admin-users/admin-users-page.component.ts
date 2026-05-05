@@ -1,11 +1,12 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, signal, OnInit } from '@angular/core';
 import { NgClass, NgFor, NgIf } from '@angular/common';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AdminUsersApiService, UserFilters } from '../../core/api/admin-users-api.service';
+import { AdminRolesApiService } from '../../core/api/admin-roles-api.service';
 import { getErrorMessage } from '../../core/api/api.types';
-import { Pagination, UserSummary } from '../../core/models/user.models';
+import { Pagination, Role, UserSummary } from '../../core/models/user.models';
 import { appConfig } from '../../core/config/app-config';
 import { AuthStateService } from '../../core/auth/auth-state.service';
 import { formatDateTime } from '../../core/utils/date-utils';
@@ -13,7 +14,7 @@ import { roleBadgeClass, statusBadgeClass, statusLabel } from '../../core/utils/
 
 interface AdminUsersFilterForm {
   username: string; email: string; fullName: string; dob: string;
-  role: '' | 'user' | 'admin'; status: '' | 'active' | 'pending_verification' | 'deleted'; includeDeleted: boolean;
+  roleCode: string; status: '' | 'active' | 'pending_verification' | 'deleted'; includeDeleted: boolean;
 }
 
 @Component({
@@ -22,7 +23,7 @@ interface AdminUsersFilterForm {
   template: `
     <div class="stack-lg">
       <section class="page-head">
-        <div><p class="eyebrow">Admin</p><h1>User operations</h1><p>Search users, review accounts, and manage access.</p></div>
+        <div><p class="eyebrow">Admin</p><h1>Team Directory</h1><p>Search users, review accounts, and manage access.</p></div>
         <a class="btn btn-primary" routerLink="/admin/users/new" *ngIf="enableCreateUser" id="admin-create-user-btn">Create user</a>
       </section>
       <article class="panel section-card">
@@ -32,7 +33,12 @@ interface AdminUsersFilterForm {
             <label class="field"><span>Email</span><input type="text" formControlName="email" placeholder="Search email" /></label>
             <label class="field"><span>Full name</span><input type="text" formControlName="fullName" placeholder="Search full name" /></label>
             <label class="field"><span>Date of birth</span><input type="date" formControlName="dob" /></label>
-            <label class="field"><span>Role</span><select formControlName="role"><option value="">All roles</option><option value="user">user</option><option value="admin">admin</option></select></label>
+            <label class="field"><span>Role</span>
+              <select formControlName="roleCode">
+                <option value="">All roles</option>
+                <option *ngFor="let r of availableRoles()" [value]="r.code">{{ r.name }}</option>
+              </select>
+            </label>
             <label class="field"><span>Status</span><select formControlName="status"><option value="">All statuses</option><option value="active">active</option><option value="pending_verification">pending</option><option value="deleted">deleted</option></select></label>
             <label class="field field-inline"><span>Filters</span><label class="checkbox-wrap"><input type="checkbox" formControlName="includeDeleted" />Include deleted users</label></label>
           </div>
@@ -52,13 +58,13 @@ interface AdminUsersFilterForm {
             <tbody>
               <tr *ngFor="let user of users()">
                 <td><p class="strong">{{ user.firstName }} {{ user.lastName }}</p><p class="muted">{{ user.email }}</p><p class="muted">&#64;{{ user.username }}</p></td>
-                <td><span [ngClass]="roleClass(user.role)">{{ user.role }}</span></td>
+                <td><span [ngClass]="roleClass(user.role.code)">{{ user.role.name }}</span></td>
                 <td><span [ngClass]="statusClass(user.status)">{{ statusText(user.status) }}</span></td>
                 <td>{{ formatDateTimeValue(user.updatedAt) }}</td>
                 <td>
                   <button class="link-button" *ngIf="user.status === 'deleted'" [disabled]="restoreLoading()" (click)="openRestoreDialog(user)">{{ restoreLoading() ? 'Restoring...' : 'Restore' }}</button>
-                  <span class="muted" *ngIf="user.role === 'admin' && user.id === currentUserId()">Current admin</span>
-                  <a class="link-button" *ngIf="user.status !== 'deleted' && !(user.role === 'admin' && user.id === currentUserId())" [routerLink]="['/admin/users', user.id]">View details</a>
+                  <span class="muted" *ngIf="user.role.code === 'ROLE_CODE_ADMIN' && user.id === currentUserId()">Current admin</span>
+                  <a class="link-button" *ngIf="user.status !== 'deleted' && !(user.role.code === 'ROLE_CODE_ADMIN' && user.id === currentUserId())" [routerLink]="['/admin/users', user.id]">View details</a>
                 </td>
               </tr>
             </tbody>
@@ -66,11 +72,11 @@ interface AdminUsersFilterForm {
           <div class="mobile-list">
             <article class="mobile-item" *ngFor="let user of users()">
               <div><p class="strong">{{ user.firstName }} {{ user.lastName }}</p><p class="muted">{{ user.email }}</p></div>
-              <div class="badge-row"><span [ngClass]="roleClass(user.role)">{{ user.role }}</span><span [ngClass]="statusClass(user.status)">{{ statusText(user.status) }}</span></div>
+              <div class="badge-row"><span [ngClass]="roleClass(user.role.code)">{{ user.role.name }}</span><span [ngClass]="statusClass(user.status)">{{ statusText(user.status) }}</span></div>
               <div class="mobile-actions">
                 <button class="link-button" *ngIf="user.status === 'deleted'" [disabled]="restoreLoading()" (click)="openRestoreDialog(user)">{{ restoreLoading() ? 'Restoring...' : 'Restore' }}</button>
-                <span class="muted" *ngIf="user.role === 'admin' && user.id === currentUserId()">Current admin</span>
-                <a class="link-button" *ngIf="user.status !== 'deleted' && !(user.role === 'admin' && user.id === currentUserId())" [routerLink]="['/admin/users', user.id]">Open</a>
+                <span class="muted" *ngIf="user.role.code === 'ROLE_CODE_ADMIN' && user.id === currentUserId()">Current admin</span>
+                <a class="link-button" *ngIf="user.status !== 'deleted' && !(user.role.code === 'ROLE_CODE_ADMIN' && user.id === currentUserId())" [routerLink]="['/admin/users', user.id]">Open</a>
               </div>
             </article>
           </div>
@@ -96,36 +102,41 @@ interface AdminUsersFilterForm {
     </div>
   `,
 })
-export class AdminUsersPageComponent {
+export class AdminUsersPageComponent implements OnInit {
   readonly enableCreateUser = appConfig.featureFlags.enableAdminCreateUser;
   readonly loading = signal(true);
   readonly error = signal('');
   readonly users = signal<UserSummary[]>([]);
   readonly meta = signal<Pagination>({ page: 1, pageSize: 20, total: 0 });
+  readonly availableRoles = signal<Role[]>([]);
   readonly restoreTarget = signal<UserSummary | null>(null);
   readonly restoreLoading = signal(false);
   readonly currentUserId = computed(() => this.authState.currentUser()?.id ?? '');
   readonly totalPages = computed(() => Math.max(1, Math.ceil(this.meta().total / this.meta().pageSize)));
-  readonly filtersForm = this.fb.group<AdminUsersFilterForm>({ username: '', email: '', fullName: '', dob: '', role: '', status: '', includeDeleted: false });
-  readonly currentFilters = signal<UserFilters>({ page: 1, pageSize: 20, role: '', status: '', includeDeleted: false });
+  readonly filtersForm = this.fb.group<AdminUsersFilterForm>({ username: '', email: '', fullName: '', dob: '', roleCode: '', status: '', includeDeleted: false });
+  readonly currentFilters = signal<UserFilters>({ page: 1, pageSize: 20, roleCode: '', status: '', includeDeleted: false });
 
-  constructor(private readonly fb: NonNullableFormBuilder, private readonly route: ActivatedRoute, private readonly router: Router, private readonly adminUsersApi: AdminUsersApiService, private readonly authState: AuthStateService) {
+  constructor(private readonly fb: NonNullableFormBuilder, private readonly route: ActivatedRoute, private readonly router: Router, private readonly adminUsersApi: AdminUsersApiService, private readonly adminRolesApi: AdminRolesApiService, private readonly authState: AuthStateService) {
     document.title = 'Admin Users | Portal';
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const filters = this.parseFilters(params);
       this.currentFilters.set(filters);
-      this.filtersForm.patchValue({ username: filters.username || '', email: filters.email || '', fullName: filters.fullName || '', dob: filters.dob || '', role: filters.role || '', status: filters.status || '', includeDeleted: Boolean(filters.includeDeleted) }, { emitEvent: false });
+      this.filtersForm.patchValue({ username: filters.username || '', email: filters.email || '', fullName: filters.fullName || '', dob: filters.dob || '', roleCode: filters.roleCode || '', status: filters.status || '', includeDeleted: Boolean(filters.includeDeleted) }, { emitEvent: false });
       this.loadUsers(filters);
     });
+  }
+
+  ngOnInit() {
+    this.adminRolesApi.getRoles().subscribe(roles => this.availableRoles.set(roles));
   }
 
   applyFilters(): void {
     const v = this.filtersForm.getRawValue();
     const c = this.currentFilters();
-    this.navigateWithFilters({ page: 1, pageSize: c.pageSize || 20, username: v.username || undefined, email: v.email || undefined, fullName: v.fullName || undefined, dob: v.dob || undefined, role: v.role || '', status: v.status || '', includeDeleted: v.includeDeleted });
+    this.navigateWithFilters({ page: 1, pageSize: c.pageSize || 20, username: v.username || undefined, email: v.email || undefined, fullName: v.fullName || undefined, dob: v.dob || undefined, roleCode: v.roleCode || undefined, status: v.status || '', includeDeleted: v.includeDeleted });
   }
 
-  resetFilters(): void { this.navigateWithFilters({ page: 1, pageSize: 20, role: '', status: '', includeDeleted: false }); }
+  resetFilters(): void { this.navigateWithFilters({ page: 1, pageSize: 20, roleCode: '', status: '', includeDeleted: false }); }
   prevPage(): void { const c = this.currentFilters(); if (c.page > 1) this.navigateWithFilters({ ...c, page: c.page - 1 }); }
   nextPage(): void { const c = this.currentFilters(); if (c.page < this.totalPages()) this.navigateWithFilters({ ...c, page: c.page + 1 }); }
   openRestoreDialog(user: UserSummary): void { this.restoreTarget.set(user); }
@@ -143,11 +154,11 @@ export class AdminUsersPageComponent {
   private parseFilters(params: ParamMap): UserFilters {
     const page = Number(params.get('page') || '1');
     const pageSize = Number(params.get('page_size') || '20');
-    return { page: Number.isFinite(page) && page > 0 ? page : 1, pageSize: Number.isFinite(pageSize) && pageSize > 0 ? pageSize : 20, username: params.get('username') || undefined, email: params.get('email') || undefined, fullName: params.get('full_name') || undefined, dob: params.get('dob') || undefined, role: (params.get('role') as UserFilters['role']) || '', status: (params.get('status') as UserFilters['status']) || '', includeDeleted: params.get('include_deleted') === 'true' };
+    return { page: Number.isFinite(page) && page > 0 ? page : 1, pageSize: Number.isFinite(pageSize) && pageSize > 0 ? pageSize : 20, username: params.get('username') || undefined, email: params.get('email') || undefined, fullName: params.get('full_name') || undefined, dob: params.get('dob') || undefined, roleCode: params.get('role_code') || undefined, status: (params.get('status') as UserFilters['status']) || '', includeDeleted: params.get('include_deleted') === 'true' };
   }
 
   private navigateWithFilters(filters: UserFilters): void {
-    this.router.navigate([], { relativeTo: this.route, queryParams: { page: filters.page, page_size: filters.pageSize, username: filters.username || null, email: filters.email || null, full_name: filters.fullName || null, dob: filters.dob || null, role: filters.role || null, status: filters.status || null, include_deleted: filters.includeDeleted ? 'true' : null } });
+    this.router.navigate([], { relativeTo: this.route, queryParams: { page: filters.page, page_size: filters.pageSize, username: filters.username || null, email: filters.email || null, full_name: filters.fullName || null, dob: filters.dob || null, role_code: filters.roleCode || null, status: filters.status || null, include_deleted: filters.includeDeleted ? 'true' : null } });
   }
 
   private loadUsers(filters: UserFilters): void {

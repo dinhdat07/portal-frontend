@@ -35,7 +35,7 @@ import { roleBadgeClass, statusBadgeClass, statusLabel } from '../../core/utils/
               <p>&#64;{{ currentUser.username }}</p>
             </div>
             <div class="badge-row">
-              <span [ngClass]="roleClass(currentUser.role)">{{ currentUser.role }}</span>
+              <span [ngClass]="roleClass(currentUser.role.code)">{{ currentUser.role.name }}</span>
               <span [ngClass]="statusClass(currentUser.status)">{{ statusText(currentUser.status) }}</span>
             </div>
           </div>

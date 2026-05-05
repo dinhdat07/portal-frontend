@@ -6,9 +6,7 @@ import {
   PaginatedTransportUsers,
   PaginatedUsers,
   TransportUser,
-  UserRole,
   UserStatus,
-  mapUserRoleToTransport,
   mapUserStatusToTransport,
 } from '../models/user.models';
 import { ApiClientService } from './api-client.service';
@@ -20,7 +18,7 @@ export interface UserFilters {
   email?: string;
   fullName?: string;
   dob?: string;
-  role?: UserRole | '';
+  roleCode?: string;
   status?: UserStatus | '';
   includeDeleted?: boolean;
 }
@@ -30,7 +28,6 @@ export class AdminUsersApiService {
   constructor(private readonly api: ApiClientService) {}
 
   getAdminUsers(filters: UserFilters) {
-    const roleQuery = filters.role ? mapUserRoleToTransport(filters.role) : undefined;
     const statusQuery = filters.status ? mapUserStatusToTransport(filters.status) : undefined;
 
     return this.api
@@ -42,7 +39,7 @@ export class AdminUsersApiService {
           email: filters.email,
           full_name: filters.fullName,
           dob: filters.dob,
-          role: roleQuery,
+          role_code: filters.roleCode,
           status: statusQuery,
           include_deleted: filters.includeDeleted ? true : undefined,
         },
@@ -67,13 +64,10 @@ export class AdminUsersApiService {
     first_name: string;
     last_name: string;
     dob: string;
-    role: UserRole;
+    role_code: string;
   }) {
     return this.api
-      .post<TransportUser>('/admin/users', {
-        ...payload,
-        role: mapUserRoleToTransport(payload.role)
-      })
+      .post<TransportUser>('/admin/users', payload)
       .pipe(map((response) => mapTransportUser(response)));
   }
 
@@ -91,9 +85,9 @@ export class AdminUsersApiService {
       .pipe(map((response) => mapTransportUser(response)));
   }
 
-  updateAdminUserRole(userId: string, role: UserRole) {
+  updateAdminUserRole(userId: string, roleCode: string) {
     return this.api
-      .put<TransportUser>(`/admin/users/${userId}/role`, { role: mapUserRoleToTransport(role) })
+      .put<TransportUser>(`/admin/users/${userId}/role`, { role_code: roleCode })
       .pipe(map((response) => mapTransportUser(response)));
   }
 
