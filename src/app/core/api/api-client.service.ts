@@ -5,7 +5,7 @@ import {
   HttpErrorResponse,
   HttpParams,
 } from '@angular/common/http';
-import { catchError, throwError } from 'rxjs';
+import { catchError, throwError, timeout, TimeoutError } from 'rxjs';
 import { appConfig } from '../config/app-config';
 import { ApiError, ApiErrorPayload } from './api.types';
 
@@ -14,6 +14,8 @@ export interface RequestOptions {
   query?: Record<string, string | number | boolean | undefined | null>;
   context?: HttpContext;
 }
+
+const REQUEST_TIMEOUT_MS = 30_000;
 
 @Injectable({ providedIn: 'root' })
 export class ApiClientService {
@@ -45,10 +47,16 @@ export class ApiClientService {
         context: options?.context,
       })
       .pipe(
-        catchError((error: HttpErrorResponse) => {
-          const payload = error.error as ApiErrorPayload | null;
+        timeout(REQUEST_TIMEOUT_MS),
+        catchError((error: unknown) => {
+          if (error instanceof TimeoutError) {
+            return throwError(() => new ApiError(0, 'Request timed out. Please try again.'));
+          }
+
+          const httpError = error as HttpErrorResponse;
+          const payload = httpError.error as ApiErrorPayload | null;
           return throwError(
-            () => new ApiError(error.status, payload?.error || payload?.message || 'Request failed'),
+            () => new ApiError(httpError.status, payload?.error || payload?.message || 'Request failed'),
           );
         }),
       );

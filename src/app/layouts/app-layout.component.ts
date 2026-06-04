@@ -2,11 +2,18 @@ import { Component, computed, signal } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthStateService } from '../core/auth/auth-state.service';
+import { appConfig } from '../core/config/app-config';
 
 interface NavigationItem {
   label: string;
   path: string;
+}
+
+interface NavSection {
+  header?: string;
+  items: NavigationItem[];
   adminOnly?: boolean;
+  featureFlag?: keyof typeof appConfig.featureFlags;
 }
 
 @Component({
@@ -25,14 +32,17 @@ interface NavigationItem {
           </div>
 
           <nav class="nav-list">
-            <a
-              *ngFor="let item of visibleNavigation()"
-              [routerLink]="item.path"
-              routerLinkActive="nav-link-active"
-              class="nav-link"
-            >
-              {{ item.label }}
-            </a>
+            <ng-container *ngFor="let section of visibleSections()">
+              <p class="eyebrow nav-section" *ngIf="section.header">{{ section.header }}</p>
+              <a
+                *ngFor="let item of section.items"
+                [routerLink]="item.path"
+                routerLinkActive="nav-link-active"
+                class="nav-link"
+              >
+                {{ item.label }}
+              </a>
+            </ng-container>
           </nav>
 
           <section class="user-panel">
@@ -65,19 +75,52 @@ interface NavigationItem {
   `,
 })
 export class AppLayoutComponent {
-  private readonly navigation: NavigationItem[] = [
-    { label: 'Profile', path: '/account/profile' },
-    { label: 'Security', path: '/account/security' },
-    { label: 'Team Directory', path: '/admin/users', adminOnly: true },
-    { label: 'Access Policies', path: '/admin/roles', adminOnly: true },
+  private readonly navSections: NavSection[] = [
+    {
+      header: 'Account',
+      items: [
+        { label: 'Profile', path: '/account/profile' },
+        { label: 'Security', path: '/account/security' },
+      ],
+    },
+    {
+      header: 'Admin',
+      adminOnly: true,
+      items: [
+        { label: 'Team Directory', path: '/admin/users' },
+        { label: 'Access Policies', path: '/admin/roles' },
+      ],
+    },
+    {
+      header: 'Infrastructure',
+      adminOnly: true,
+      featureFlag: 'enableServerManagement',
+      items: [
+        { label: 'Server Dashboard', path: '/servers/dashboard' },
+        { label: 'Server Inventory', path: '/servers/inventory' },
+        { label: 'Import Servers', path: '/servers/import' },
+        { label: 'Uptime Reports', path: '/servers/reports' },
+      ],
+    },
   ];
 
   readonly user = computed(() => this.authState.currentUser());
   readonly isSigningOut = signal(false);
 
-  readonly visibleNavigation = computed(() =>
-    this.navigation.filter((item) => !item.adminOnly || this.user()?.role.code === 'ROLE_CODE_ADMIN'),
-  );
+  readonly visibleSections = computed(() => {
+    const isAdmin = this.user()?.role.code === 'ROLE_CODE_ADMIN';
+
+    return this.navSections
+      .filter((section) => {
+        if (section.adminOnly && !isAdmin) {
+          return false;
+        }
+        if (section.featureFlag && !appConfig.featureFlags[section.featureFlag]) {
+          return false;
+        }
+        return true;
+      });
+  });
 
   constructor(
     private readonly authState: AuthStateService,

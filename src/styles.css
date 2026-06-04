@@ -718,6 +718,12 @@ li+li {
   color: var(--text-secondary);
 }
 
+.badge-error {
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1px solid var(--error-border);
+}
+
 .badge-accent {
   background: rgba(0, 100, 224, 0.1);
   color: var(--meta-blue);
@@ -1052,4 +1058,120 @@ li+li {
   .btn {
     width: 100%;
   }
+}
+
+/* ===== Stat Cards (Server Dashboard) ===== */
+.grid-4col {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+
+.stat-card {
+  text-align: center;
+  padding: var(--space-6);
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: var(--space-2) 0 0;
+}
+
+.stat-success .stat-number { color: var(--success); }
+.stat-danger .stat-number { color: var(--error); }
+.stat-info .stat-number { color: var(--meta-blue); }
+
+@media (max-width: 768px) {
+  .grid-4col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ===== Detail List (Server Detail) ===== */
+.detail-list {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2) var(--space-4);
+}
+
+.detail-list dt {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.detail-list dd {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+/* ===== Two-Column Grid ===== */
+.grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+}
+
+@media (max-width: 768px) {
+  .grid-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Button Group ===== */
+.btn-group {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+/* ===== Button Sizes ===== */
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+/* ===== Pagination Row ===== */
+.pagination-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  font-size: 14px;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--divider);
+}
+
+/* ===== Navigation Section Header ===== */
+.nav-section {
+  margin-top: var(--space-4);
+  margin-bottom: var(--space-2);
+  padding-left: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ===== Empty State ===== */
+.empty-state {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  color: var(--text-secondary);
+}
+
+.empty-state .strong {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: 1rem;
 }

@@ -59,6 +59,41 @@ export const routes: Routes = [
           { path: 'roles/:roleId', component: AdminRoleDetailPageComponent },
         ],
       },
+      {
+        path: 'servers',
+        canActivate: [adminGuard],
+        children: [
+          { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+          {
+            path: 'dashboard',
+            loadComponent: () => import('./features/server-management/server-dashboard-page.component').then(m => m.ServerDashboardPageComponent),
+          },
+          {
+            path: 'inventory',
+            loadComponent: () => import('./features/server-management/server-list-page.component').then(m => m.ServerListPageComponent),
+          },
+          {
+            path: 'new',
+            loadComponent: () => import('./features/server-management/server-create-page.component').then(m => m.ServerCreatePageComponent),
+          },
+          {
+            path: 'import',
+            loadComponent: () => import('./features/server-management/server-import-page.component').then(m => m.ServerImportPageComponent),
+          },
+          {
+            path: 'reports',
+            loadComponent: () => import('./features/server-management/server-report-page.component').then(m => m.ServerReportPageComponent),
+          },
+          {
+            path: ':serverId/edit',
+            loadComponent: () => import('./features/server-management/server-edit-page.component').then(m => m.ServerEditPageComponent),
+          },
+          {
+            path: ':serverId',
+            loadComponent: () => import('./features/server-management/server-detail-page.component').then(m => m.ServerDetailPageComponent),
+          },
+        ],
+      },
     ],
   },
   { path: '**', redirectTo: '' },

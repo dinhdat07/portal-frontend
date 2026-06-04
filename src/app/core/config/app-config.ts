@@ -6,5 +6,6 @@ export const appConfig = {
     enableAdminCreateUser: true,
     enableProfileEdit: true,
     enableAdminUserEdit: true,
+    enableServerManagement: true,
   },
 } as const;
