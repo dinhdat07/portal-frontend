@@ -45,6 +45,7 @@ export class ApiClientService {
         body: options?.body,
         params,
         context: options?.context,
+        withCredentials: true,
       })
       .pipe(
         timeout(REQUEST_TIMEOUT_MS),

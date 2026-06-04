@@ -80,11 +80,10 @@ export class AuthApiService {
     return this.api.post<ApiMessageResponse>('/auth/logout-all');
   }
 
-  refreshToken(refreshToken: string) {
+  refreshToken() {
+    // No body needed — refresh_token cookie is auto-sent by browser with withCredentials
     return this.rawHttp
-      .post<RefreshResponse>(`${appConfig.apiBaseUrl}/auth/refresh`, {
-        refresh_token: refreshToken,
-      })
+      .post<RefreshResponse>(`${appConfig.apiBaseUrl}/auth/refresh`, {})
       .pipe(
         catchError((error: HttpErrorResponse) => {
           const payload = error.error as ApiErrorPayload | null;

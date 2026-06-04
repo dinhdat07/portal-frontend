@@ -1,26 +1,16 @@
 ﻿import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, from, switchMap, throwError } from 'rxjs';
-import { ALREADY_RETRIED, AUTH_REQUIRED } from './api-context';
+import { ALREADY_RETRIED } from './api-context';
 import { AuthStateService } from '../auth/auth-state.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authState = inject(AuthStateService);
 
-  if (!req.context.get(AUTH_REQUIRED)) {
-    return next(req);
-  }
+  // Cookies are auto-sent by browser with withCredentials — no manual header needed.
+  // Still handle 401 → refresh logic.
 
-  const accessToken = authState.getAccessToken();
-  const requestWithAuth = accessToken
-    ? req.clone({
-        setHeaders: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-    : req;
-
-  return next(requestWithAuth).pipe(
+  return next(req).pipe(
     catchError((error: unknown) => {
       const httpError = error as HttpErrorResponse;
 
@@ -33,11 +23,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
-      if (!authState.hasRefreshToken()) {
-        authState.handleUnauthorized();
-        return throwError(() => error);
-      }
-
       return from(authState.refreshAccessToken()).pipe(
         switchMap((refreshed) => {
           if (!refreshed) {
@@ -45,19 +30,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return throwError(() => error);
           }
 
-          const latestToken = authState.getAccessToken();
-          if (!latestToken) {
-            authState.handleUnauthorized();
-            return throwError(() => error);
-          }
-
           const retryRequest = req.clone({
-            setHeaders: {
-              Authorization: `Bearer ${latestToken}`,
-            },
             context: req.context.set(ALREADY_RETRIED, true),
           });
-
           return next(retryRequest);
         }),
         catchError((refreshError) => {

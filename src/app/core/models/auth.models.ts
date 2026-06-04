@@ -10,23 +10,19 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
+  // access_token and refresh_token removed — now in HttpOnly cookies
   token_type: string;
   expires_in: number;
   user: TransportUser;
 }
 
 export interface RefreshResponse {
-  access_token: string;
-  refresh_token: string;
   token_type: string;
   expires_in: number;
 }
 
 export interface AuthSession {
-  accessToken: string;
-  refreshToken: string;
+  // accessToken and refreshToken removed — handled by HttpOnly cookies
   tokenType: string;
   expiresAt: string;
   user: UserSummary;

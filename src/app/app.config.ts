@@ -2,12 +2,15 @@
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
+import { csrfInterceptor } from './core/api/csrf.interceptor';
 import { authInterceptor } from './core/api/auth.interceptor';
 
 export const appRuntimeConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor])),
+    provideHttpClient(
+      withInterceptors([csrfInterceptor, authInterceptor]),
+    ),
   ],
 };
