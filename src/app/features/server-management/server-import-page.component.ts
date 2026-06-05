@@ -82,7 +82,7 @@ export class ServerImportPageComponent {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+      const MAX_SIZE = 2 * 1024 * 1024; // 2MB — đủ cho ~60,000 server
 
       if (!file.name.toLowerCase().endsWith('.xlsx')) {
         this.errorMessage.set('Only .xlsx files are allowed.');
@@ -91,7 +91,7 @@ export class ServerImportPageComponent {
       }
 
       if (file.size > MAX_SIZE) {
-        this.errorMessage.set('File must be smaller than 5MB.');
+        this.errorMessage.set('File must be smaller than 2MB.');
         input.value = '';
         return;
       }
